@@ -2,14 +2,24 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 
 export function activate(context: vscode.ExtensionContext) {
-    // The central "run_command" dispatcher for the AI
+    /**
+     * The central "run_command" dispatcher.
+     * This serves as the direct interface for Gemini / AI Assistants.
+     */
     let runCommand = vscode.commands.registerCommand('aiManager.run_command', async (args: { 
         action: 'create' | 'read' | 'update' | 'delete', 
         path: string, 
-        newPath?: string // Used for 'update' (rename)
+        newPath?: string 
     }) => {
+        // 1. Validation for the AI's input
+        if (!args || !args.path) {
+            vscode.window.showErrorMessage('AI FS Manager: No path provided in arguments.');
+            return { success: false, message: "Path argument is missing." };
+        }
+
         const workspaceFolders = vscode.workspace.workspaceFolders;
         if (!workspaceFolders) {
+            vscode.window.showErrorMessage('AI FS Manager: No workspace folder open.');
             return { success: false, message: "No workspace folder open." };
         }
 
@@ -19,27 +29,33 @@ export function activate(context: vscode.ExtensionContext) {
         try {
             switch (args.action) {
                 case 'create':
+                    // createDirectory is recursive by default
                     await vscode.workspace.fs.createDirectory(targetUri);
                     return { success: true, message: `Directory created: ${args.path}` };
 
                 case 'read':
                     const entries = await vscode.workspace.fs.readDirectory(targetUri);
-                    // Returns a list of [name, type] where 2 is a directory
-                    const dirList = entries.map(([name, type]) => ({ name, type: type === 2 ? 'dir' : 'file' }));
+                    const dirList = entries.map(([name, type]) => ({ 
+                        name, 
+                        type: type === vscode.FileType.Directory ? 'dir' : 'file' 
+                    }));
                     return { success: true, data: dirList };
 
                 case 'update':
-                    if (!args.newPath) throw new Error("newPath is required for update.");
+                    if (!args.newPath) {
+                        throw new Error("newPath is required for update action.");
+                    }
                     const newUri = vscode.Uri.file(path.resolve(rootPath, args.newPath));
                     await vscode.workspace.fs.rename(targetUri, newUri);
                     return { success: true, message: `Renamed ${args.path} to ${args.newPath}` };
 
                 case 'delete':
+                    // recursive: true deletes subfolders; useTrash: true is safer for AI tools
                     await vscode.workspace.fs.delete(targetUri, { recursive: true, useTrash: true });
                     return { success: true, message: `Deleted ${args.path}` };
 
                 default:
-                    return { success: false, message: "Invalid action." };
+                    return { success: false, message: `Action '${args.action}' is not supported.` };
             }
         } catch (error: any) {
             return { success: false, message: error.message };
@@ -47,21 +63,6 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
     context.subscriptions.push(runCommand);
-
-// // AUTO-VALIDATION: Runs every time you start the debugger
-//     console.log('Extension is active. Running self-test...');
-    
-//     vscode.commands.executeCommand('aiManager.run_command', { 
-//         action: 'create', 
-//         path: 'AI_FINAL_TEST' 
-//     }).then(() => {
-//         // Then Rename it
-//         return vscode.commands.executeCommand('aiManager.run_command', { 
-//             action: 'update', 
-//             path: 'AI_FINAL_TEST', 
-//             newPath: 'AI_CRUD_VERIFIED' 
-//         });
-//     }).then((res) => {
-//         console.log('Final CRUD Verification:', res);
-//     });
 }
+
+export function deactivate() {}
