@@ -2,6 +2,9 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 
 export function activate(context: vscode.ExtensionContext) {
+    const outputChannel = vscode.window.createOutputChannel('AI FS Manager Logs', { log: true });
+    context.subscriptions.push(outputChannel);
+    outputChannel.info('AI FS Manager extension activated.');
 
     /**
      * The central "run_command" dispatcher.
@@ -15,15 +18,19 @@ export function activate(context: vscode.ExtensionContext) {
         });
 
         if (!input) {
-            vscode.window.showErrorMessage('No input provided.');
+            const message = 'No input provided.';
+            vscode.window.showErrorMessage(message);
+            outputChannel.warn(`Manual command: ${message}`);
             return;
         }
 
         try {
             const args = JSON.parse(input);
+            outputChannel.info(`Manual command: Dispatching aiManager.run_command with args: ${JSON.stringify(args)}`);
             vscode.commands.executeCommand('aiManager.run_command', args);
         } catch (err: any) {
-            vscode.window.showErrorMessage('Invalid JSON: ' + err.message);
+            vscode.window.showErrorMessage(`Invalid JSON: ${err.message}`);
+            outputChannel.error(`Manual command: Invalid JSON input: ${err.message}`);
         }
     });
 

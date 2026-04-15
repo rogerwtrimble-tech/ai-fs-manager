@@ -55,6 +55,12 @@ This cheatsheet provides a quick reference for common commands used in setting u
     ```
     *This command uses the VS Code Extension Manager (`vsce`) to create a `.vsix` file, which is the distributable package for your extension. It first runs `npm run package` which includes type checking, linting, and a production build with `esbuild`.*
 
+*   **Package the Extension to a `builds` directory:**
+    ```bash
+    npx vsce package
+    mkdir -p builds && mv ai-fs-manager-*.vsix builds/
+    ```
+    *This command first creates the `.vsix` file in the current directory and then moves it into a newly created `builds` directory. The `ai-fs-manager-*.vsix` pattern ensures that the correctly versioned file is moved.*
 *   **Publish the Extension to the Marketplace:**
     ```bash
     npx vsce publish
