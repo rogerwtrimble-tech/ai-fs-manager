@@ -4,6 +4,7 @@
   "description": "Implement a simple directory manager for CRUD activities",
   "version": "1.0.0",
   "publisher": "Roger Trimble",
+  "repository": {"url": "https://github.com/rogerwtrimble-tech/ai-fs-manager.git"},
   "engines": {
     "vscode": "^1.115.0"
   },
