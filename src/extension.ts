@@ -2,6 +2,35 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 
 export function activate(context: vscode.ExtensionContext) {
+
+    /**
+     * The central "run_command" dispatcher.
+     * This serves as the direct interface for Gemini / AI Assistants.
+     */
+
+    let manualCommand = vscode.commands.registerCommand('aiManager.run_manual', async () => {
+        const input = await vscode.window.showInputBox({
+            prompt: 'Enter JSON arguments for aiManager.run_command',
+            placeHolder: '{"action":"create","path":"junk"}'
+        });
+
+        if (!input) {
+            vscode.window.showErrorMessage('No input provided.');
+            return;
+        }
+
+        try {
+            const args = JSON.parse(input);
+            vscode.commands.executeCommand('aiManager.run_command', args);
+        } catch (err: any) {
+            vscode.window.showErrorMessage('Invalid JSON: ' + err.message);
+        }
+    });
+
+    context.subscriptions.push(manualCommand);
+
+
+
     /**
      * The central "run_command" dispatcher.
      * This serves as the direct interface for Gemini / AI Assistants.
